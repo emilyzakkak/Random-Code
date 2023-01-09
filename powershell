@@ -1,0 +1,21 @@
+function Generate-VictimID {
+    $username = $env:UserName;
+    $cpuname = $env:ComputerName;
+    $ip = ( `
+        Get-NetIPConfiguration | `
+        Where-Object { 
+            $_.IPv4DefaultGateway -ne $null `
+            -and `
+            $_.NetAdapter.Status -ne "Disconnected" `
+        } `
+    ).IPv4Address.IPAddress
+
+    $text = $ip + "$" + $cpuname + "$" + $username
+
+    $md5 = new-object -TypeName System.Security.Cryptography.MD5CryptoServiceProvider
+    $utf8 = new-object -TypeName System.Text.UTF8Encoding
+    $hash = [System.BitConverter]::ToString($md5.ComputeHash($utf8.GetBytes($text)))
+    $hash = $hash.ToLower() -replace '-', '';
+
+    return $hash;
+}
